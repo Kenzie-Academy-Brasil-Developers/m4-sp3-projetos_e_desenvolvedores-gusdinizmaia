@@ -61,53 +61,45 @@ const getAllProjectsDeveloper = async (
 
   const queryFormat = format(
     `
-      select  
-        *
-      from 
-        projects as p
-      where 
-        developer_id = %s
+      select
+      d.id as developer_id,
+      d.name as developer_name,
+      d.email as developer_email,
+      d.developer_info_id,
+      di.developer_since as developer_info_developer_since,
+      di.preferred_OS as developer_info_preferred,
+      p.id as project_id,
+      p.name as project_name,
+      p.description as project_description,
+      p.estimated_time as project_estimated_time,
+      p.repository as project_repository,
+      p.start_date as project_start_date,
+      p.end_date as project_end_date,
+      t.id as technology_id,
+      t.name as technology_name
+
+      from developers as d 
+
+      left join developer_infos as di
+      on di.id = d.developer_info_id
+      
+      left join projects as p
+      on p.developer_id = d.id 
+
+      left join projects_technologies as pt
+      on pt.project_id = p.id
+
+      left join technologies as t
+      on t.id = pt.project_id
+
+      where d.id = %s
   `,
     id
   );
 
-  const queryFormatDeveloper = format(
-    `
-  select 
-    * 
-  from 
-    developers 
-  where
-    id = %s
-  `,
-    id
-  );
-
-  const queryFormatTech = format(
-    `
-  select 
-    * 
-  from 
-    projects_technologies 
-  where
-    id = %s
-  `,
-    id
-  );
-
-  const queryResultDeveloper: QueryResult = await client.query(
-    queryFormatDeveloper
-  );
-  const queryResultTech: QueryResult = await client.query(queryFormatTech);
   const queryResult: QueryResult = await client.query(queryFormat);
 
-  return res.status(200).json({
-    developer: {
-      ...queryResultDeveloper.rows[0],
-      projects: queryResult.rows,
-      techs: queryResultTech.rows,
-    },
-  });
+  return res.status(200).json(queryResult.rows);
 };
 
 const getAllDevelopers = async (
@@ -174,7 +166,7 @@ const deleteDeveloper = async (
     id
   );
   await client.query(queryFormat);
-  return res.status(200).json();
+  return res.status(204).json();
 };
 
 const postInfoDeveloper = async (
@@ -226,9 +218,9 @@ const patchInfoDeveloper = async (
     id
   );
 
-  await client.query(queryFormat);
+  const queryResult = await client.query(queryFormat);
 
-  return res.status(203).json();
+  return res.status(200).json(queryResult.rows[0]);
 };
 
 export {

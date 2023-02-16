@@ -1,10 +1,9 @@
 import { Response, Request } from "express";
-import { QueryResult } from "pg";
+import { QueryConfig, QueryResult } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
 
 const postProject = async (req: Request, res: Response): Promise<Response> => {
-  const id = parseInt(req.params.id);
   const insert = Object.keys(req.body);
   const values = Object.values(req.body);
 
@@ -17,8 +16,7 @@ const postProject = async (req: Request, res: Response): Promise<Response> => {
       returning *
   `,
     insert,
-    values,
-    id
+    values
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);
@@ -27,23 +25,34 @@ const postProject = async (req: Request, res: Response): Promise<Response> => {
 };
 
 const getProject = async (req: Request, res: Response): Promise<Response> => {
-  const id = req.params.id;
+  const id = parseInt(req.params.id);
 
-  const queryFormat = format(
-    `
+  const queryString = `
       select 
-        *
+        p.*, t.id as technology_id, 
+        t.name as technology_name
       from
-        projects 
+        projects p
+      left join 
+        projects_technologies pt
+      on
+        pt.project_id = p.id
+      join 
+        technologies t
+      on
+        t.id = pt.technology_id
       where 
-        id = %s
-  `,
-    id
-  );
+        p.id = $1
+  `;
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryConfig: QueryConfig = {
+    text: queryString,
+    values: [id],
+  };
 
-  return res.status(200).json(queryResult.rows[0]);
+  const queryResult: QueryResult = await client.query(queryConfig);
+
+  return res.status(200).json(queryResult.rows);
 };
 
 const getAllProjects = async (
@@ -51,10 +60,19 @@ const getAllProjects = async (
   res: Response
 ): Promise<Response> => {
   const queryString = `
-      select 
-        *
-      from
-        projects 
+    select 
+      p.*, t.id as technology_id, 
+      t.name as technology_name
+    from
+      projects p
+    left join 
+      projects_technologies pt
+    on
+      pt.project_id = p.id
+    left join 
+      technologies t
+    on
+      t.id = pt.technology_id
   `;
 
   const queryResult: QueryResult = await client.query(queryString);
@@ -105,7 +123,7 @@ const deleteProject = async (
 
   await client.query(queryFormat);
 
-  return res.status(200).json();
+  return res.status(204).json();
 };
 
 const postTechProject = async (
@@ -113,8 +131,22 @@ const postTechProject = async (
   res: Response
 ): Promise<Response> => {
   const id = parseInt(req.params.id);
-  const insert = Object.keys(req.body);
-  const values = Object.values(req.body);
+  const added = req.body.added_in;
+
+  const queryString = `
+    select t.id
+    from projects_technologies as pt
+    full join technologies as t
+    on pt.technology_id = t.id
+    where t.name ilike $1
+`;
+
+  const queryFormatTech = {
+    text: queryString,
+    values: [req.body.name],
+  };
+
+  const queryResultName: QueryResult = await client.query(queryFormatTech);
 
   const queryFormat = format(
     `
@@ -124,9 +156,8 @@ const postTechProject = async (
         (%L)
       returning *
   `,
-    insert,
-    values,
-    id
+    ["added_in", "project_id", "technology_id"],
+    [added, id, queryResultName.rows[0].id]
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);
@@ -141,17 +172,34 @@ const deleteTechProject = async (
   const id = parseInt(req.params.id);
   const name = req.params.name;
 
+  const queryString = `
+    select t.id
+    from projects_technologies as pt
+    full join technologies as t
+    on pt.technology_id = t.id
+    where t.name ilike $1
+`;
+
+  const queryFormatTech = {
+    text: queryString,
+    values: [name],
+  };
+
+  const queryResultName: QueryResult = await client.query(queryFormatTech);
+
   const queryFormat = format(
     `
       delete from
-        projects_technologies as pt
-      join
-        projects as p
-      on 
-        pt.id = %s
+        projects_technologies pt
+      using
+        technologies t
+      where 
+        pt.project_id = %s AND
+        pt.technology_id = %s
+
   `,
     id,
-    name
+    queryResultName.rows[0].id
   );
 
   await client.query(queryFormat);

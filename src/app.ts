@@ -21,11 +21,18 @@ import {
   postTechProject,
 } from "./logic/projects";
 
-import { validateDevelopersId, validateInfoId } from "./middlewares/developers";
+import {
+  validateDevelopersId,
+  validateInfoId,
+  validateEmail,
+  validateDeveloperKeys,
+  validateInfoKeys,
+} from "./middlewares/developers";
 import {
   validateProjectId,
-  validateTechId,
-  validateTechName,
+  validateProjectKeys,
+  validateDevProjects,
+  validateTechKeys,
 } from "./middlewares/projects";
 
 const app: Application = express();
@@ -34,7 +41,7 @@ app.use(json());
 
 // DEVELOPER
 
-app.post("/developers", postDeveloper);
+app.post("/developers", validateDeveloperKeys, validateEmail, postDeveloper);
 app.get("/developers/:id", validateDevelopersId, getDeveloper);
 app.get(
   "/developers/:id/projects",
@@ -42,23 +49,49 @@ app.get(
   getAllProjectsDeveloper
 );
 app.get("/developers", getAllDevelopers);
-app.patch("/developers/:id", validateDevelopersId, patchDeveloper);
+app.patch(
+  "/developers/:id",
+  validateDevelopersId,
+  validateDeveloperKeys,
+  validateEmail,
+  patchDeveloper
+);
 app.delete("/developers/:id", validateDevelopersId, deleteDeveloper);
-app.post("/developers/:id/infos", validateInfoId, postInfoDeveloper);
-app.patch("/developers/:id/infos", validateInfoId, patchInfoDeveloper);
+app.post(
+  "/developers/:id/infos",
+  validateInfoKeys,
+  validateDevelopersId,
+  postInfoDeveloper
+);
+app.patch(
+  "/developers/:id/infos",
+  validateInfoKeys,
+  validateDevelopersId,
+  validateInfoId,
+  patchInfoDeveloper
+);
 
 // PROJECTS
 
-app.post("/projects", postProject);
+app.post("/projects", validateDevProjects, validateProjectKeys, postProject);
 app.get("/projects/:id", validateProjectId, getProject);
 app.get("/projects", getAllProjects);
-app.patch("/projects/:id", validateProjectId, patchProject);
+app.patch(
+  "/projects/:id",
+  validateProjectKeys,
+  validateProjectId,
+  patchProject
+);
 app.delete("/projects/:id", validateProjectId, deleteProject);
-app.post("/projects/:id/technologies", validateTechId, postTechProject);
+app.post(
+  "/projects/:id/technologies",
+  validateTechKeys,
+  validateProjectId,
+  postTechProject
+);
 app.delete(
   "/projects/:id/technologies/:name",
-  validateTechId,
-  validateTechName,
+  validateProjectId,
   deleteTechProject
 );
 
