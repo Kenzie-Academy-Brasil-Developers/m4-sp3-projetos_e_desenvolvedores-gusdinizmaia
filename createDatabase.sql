@@ -1,16 +1,16 @@
-
+create type preferred_os as enum ('Windows', 'MacOS', 'Linux');
 
 create table developer_infos (
     id serial primary key,
     developer_since date not null,
-    preferred_os preferredOS not null
+    "preferred_os" preferred_os not null
 );
 
 create table developers (
     id serial primary key,
     name varchar(50) not null,
-    email varchar(50) not null,
-    developer_info_id integer,
+    email varchar(50) not null unique,
+    developer_info_id integer unique,
     foreign key (developer_info_id) references developer_infos(id)
 );
 
@@ -24,7 +24,6 @@ create table projects (
     end_date date,
     developer_id integer not null,
     foreign key (developer_id) references developers(id)
-
 );
 
 create table projects_technologies (
@@ -33,7 +32,7 @@ create table projects_technologies (
     project_id integer not null,
     technology_id integer not null,
     foreign key (project_id) references projects(id),
-    foreign key (technology_id) references technologies(id)   
+    foreign key (technology_id) references technologies(id)
 );
 
 create table technologies (
