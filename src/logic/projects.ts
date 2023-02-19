@@ -29,18 +29,18 @@ const getProject = async (req: Request, res: Response): Promise<Response> => {
 
   const queryString = `
       select 
-        p.*, t.id as technology_id, 
-        t.name as technology_name
-      from
-        projects p
-      left join 
-        projects_technologies pt
-      on
-        pt.project_id = p.id
-      join 
-        technologies t
-      on
-        t.id = pt.technology_id
+      p.*, t.id as "technologyId", 
+      t.name as "technologyName"
+    from
+      projects p
+    left join 
+      projects_technologies pt
+    on
+      pt."projectId" = p.id
+    left join 
+      technologies t
+    on
+      t.id = pt."technologyId"
       where 
         p.id = $1
   `;
@@ -61,18 +61,18 @@ const getAllProjects = async (
 ): Promise<Response> => {
   const queryString = `
     select 
-      p.*, t.id as technology_id, 
-      t.name as technology_name
+      p.*, t.id as "technologyId", 
+      t.name as "technologyName"
     from
       projects p
     left join 
       projects_technologies pt
     on
-      pt.project_id = p.id
+      pt."projectId" = p.id
     left join 
       technologies t
     on
-      t.id = pt.technology_id
+      t.id = pt."technologyId"
   `;
 
   const queryResult: QueryResult = await client.query(queryString);
@@ -131,22 +131,7 @@ const postTechProject = async (
   res: Response
 ): Promise<Response> => {
   const id = parseInt(req.params.id);
-  const added = req.body.added_in;
-
-  const queryString = `
-    select t.id
-    from projects_technologies as pt
-    full join technologies as t
-    on pt.technology_id = t.id
-    where t.name ilike $1
-`;
-
-  const queryFormatTech = {
-    text: queryString,
-    values: [req.body.name],
-  };
-
-  const queryResultName: QueryResult = await client.query(queryFormatTech);
+  const added = req.body.addedIn;
 
   const queryFormat = format(
     `
@@ -155,9 +140,7 @@ const postTechProject = async (
       values 
         (%L)
       returning *
-  `,
-    ["added_in", "project_id", "technology_id"],
-    [added, id, queryResultName.rows[0].id]
+  `
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);

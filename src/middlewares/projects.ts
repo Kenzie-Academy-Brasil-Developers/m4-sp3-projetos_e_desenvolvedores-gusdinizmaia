@@ -8,7 +8,7 @@ const validateDevProjects = async (
   resp: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const id = parseInt(req.body.developer_id);
+  const id = parseInt(req.body.developerId);
 
   const queryFormat = format(
     `
@@ -38,7 +38,7 @@ const validateProjectKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredProject);
+  const findError = verificationKeys(req.method, req.body, requiredProject);
 
   if (findError) {
     return res.status(400).json(findError);
@@ -52,7 +52,7 @@ const validateTechKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredTech);
+  const findError = verificationKeys(req.method, req.body, requiredTech);
 
   if (findError) {
     return res.status(400).json(findError);

@@ -51,8 +51,8 @@ app.get(
 app.get("/developers", getAllDevelopers);
 app.patch(
   "/developers/:id",
-  validateDevelopersId,
   validateDeveloperKeys,
+  validateDevelopersId,
   validateEmail,
   patchDeveloper
 );
@@ -73,7 +73,7 @@ app.patch(
 
 // PROJECTS
 
-app.post("/projects", validateDevProjects, validateProjectKeys, postProject);
+app.post("/projects", validateProjectKeys, validateDevProjects, postProject);
 app.get("/projects/:id", validateProjectId, getProject);
 app.get("/projects", getAllProjects);
 app.patch(

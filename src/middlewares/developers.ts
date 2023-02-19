@@ -5,7 +5,9 @@ import { client } from "../database/config";
 import {
   requiredDeveloper,
   requiredInfo,
+  requiredOs,
   verificationKeys,
+  verificationTypes,
 } from "../functions";
 
 const validateInfoKeys = async (
@@ -13,10 +15,14 @@ const validateInfoKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredInfo);
-
+  const findError = verificationKeys(req.method, req.body, requiredInfo);
   if (findError) {
     return res.status(400).json(findError);
+  }
+
+  const findErrorOs = verificationTypes(requiredOs, req.body.preferredOS);
+  if (findErrorOs) {
+    return res.status(400).json(findErrorOs);
   }
 
   next();
@@ -27,7 +33,7 @@ const validateDeveloperKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredDeveloper);
+  const findError = verificationKeys(req.method, req.body, requiredDeveloper);
 
   if (findError) {
     return res.status(400).json(findError);

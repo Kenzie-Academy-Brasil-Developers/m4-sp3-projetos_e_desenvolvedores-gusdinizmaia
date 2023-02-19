@@ -33,18 +33,18 @@ const getDeveloper = async (req: Request, res: Response): Promise<Response> => {
   const queryFormat = format(
     `
     select  
-      d.id, d.name, d.email, 
-      d.developer_info_id,
-      di.developer_since, 
-      di.preferred_os
+      d."id" as "developerId",d."name" as "developerName",
+      d."email" as "developerEmail",d."developerInfoId",
+      di."developerSince" as "developerInfoDeveloperSince",
+      di."preferredOS" as "developerInfoPreferredOS"
     from 
       developers d
     left join
       developer_infos di
     on 
-      d.developer_info_id  = di.id
+      d."developerInfoId"  = di.id
     where
-        d.id = %s
+      d.id = %s
   `,
     id
   );
@@ -108,15 +108,15 @@ const getAllDevelopers = async (
 ): Promise<Response> => {
   const queryString = `
       select  
-        d.id, d.name, d.email, 
-        d.developer_info_id,
-        di.developer_since, 
-        di.preferred_os
+        d."id" as "developerId",d."name" as "developerName",
+        d."email" as "developerEmail",d."developerInfoId",
+        di."developerSince" as "developerInfoDeveloperSince",
+        di."preferredOS" as "developerInfoPreferredOS"
       from 
         developers d
       left join
         developer_infos di
-      on d.developer_info_id  = di.id;
+      on d."developerInfoId"  = di.id;
   `;
   const queryResult: QueryResult = await client.query(queryString);
 
@@ -179,19 +179,25 @@ const postInfoDeveloper = async (
 
   const queryFormat = format(
     `
-      insert into developer_infos 
-        (%I) 
-      values 
-        (%L)
+    with data as
+      (insert into developer_infos (%I) 
+      values (%L)
+      returning *),
+    data2 as (
+      update developers as d
+      set "developerInfoId" = data.id
+      from data
+      where d.id = %s
       returning *
-  `,
+    )
+    select * from data;
+      `,
     insert,
     values,
     id
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);
-
   return res.status(201).json(queryResult.rows[0]);
 };
 
