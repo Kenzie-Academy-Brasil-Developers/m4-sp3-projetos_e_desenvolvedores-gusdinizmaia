@@ -16,7 +16,7 @@ create table developers (
     "name" varchar(50) not null,
     "email" varchar(50) not null unique,
     "developerInfoId" integer unique,
-    foreign key ("developerInfoId") references developer_infos(id) on delete cascade
+    foreign key ("developerInfoId") references developer_infos(id)
 );
 
 create table projects (
@@ -28,16 +28,16 @@ create table projects (
     "startDate" date not null,
     "endDate" date,
     "developerId" integer not null,
-    foreign key ("developerId") references developers("id")
+    foreign key ("developerId") references developers("id") on delete cascade
 );
 
 
 create table projects_technologies (
     "id" serial not null primary key,
-    "addedIn" date not null,
+    "addedIn" date not null default current_date,
     "projectId" integer not null,
     "technologyId" integer not null,
-    foreign key ("projectId") references projects(id),
+    foreign key ("projectId") references projects(id) on delete cascade,
     foreign key ("technologyId") references technologies(id)
 );
 

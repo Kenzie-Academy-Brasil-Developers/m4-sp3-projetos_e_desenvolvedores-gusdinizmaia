@@ -67,7 +67,6 @@ app.patch(
   "/developers/:id/infos",
   validateInfoKeys,
   validateDevelopersId,
-  validateInfoId,
   patchInfoDeveloper
 );
 

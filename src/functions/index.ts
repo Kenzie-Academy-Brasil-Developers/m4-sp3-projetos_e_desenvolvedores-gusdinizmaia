@@ -12,12 +12,10 @@ const requiredProject = [
 const requiredTech = ["name"];
 
 const verificationKeys = (method: string, body: any, required: string[]) => {
-  const keys = Object.keys(body);
+  const keys: string[] | [] = Object.keys(body);
   keys.forEach((elem) => (required.includes(elem) ? elem : delete body[elem]));
 
   const newKeys = Object.keys(body);
-
-  console.log(newKeys);
 
   if (newKeys.length <= 0) {
     return {
@@ -41,7 +39,7 @@ const verificationKeys = (method: string, body: any, required: string[]) => {
       return findError
         ? false
         : {
-            message: "Missing required keys, you need at least one",
+            message: "At least one of those keys must be send.",
             keys: findError,
           };
     }

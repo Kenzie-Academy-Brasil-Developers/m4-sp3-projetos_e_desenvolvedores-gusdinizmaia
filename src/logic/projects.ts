@@ -28,7 +28,7 @@ const getProject = async (req: Request, res: Response): Promise<Response> => {
   const id = parseInt(req.params.id);
 
   const queryString = `
-      select 
+    select 
       p.*, t.id as "technologyId", 
       t.name as "technologyName"
     from
@@ -130,21 +130,37 @@ const postTechProject = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
+  const name = req.body.name;
   const id = parseInt(req.params.id);
   const added = req.body.addedIn;
 
   const queryFormat = format(
     `
-      insert into projects_technologies
-        (%I) 
-      values 
-        (%L)
-      returning *
-  `
+    with tech as (
+        select * from technologies t
+        where t.name ilike '%s'),
+    insert_tech as (
+        insert into projects_technologies ("addedIn", "projectId", "technologyId")
+        values( current_date , %s , (select t.id from tech t))
+        returning * ),
+    data as (
+      select t.name as "technologyName", t.id as "technologyId",
+      p."id" as "projectId", p."name" as "projectName",
+      p."description" as "projectDescription", 
+      p."estimatedTime" as "projectEstimatedTime",
+      p."repository" as "projectRepository",
+      p."startDate" as "projectStartDate",
+      p."endDate" as "projectEndDate"
+      from projects as p
+      join insert_tech it on it."projectId" = p.id
+      join tech t on t.id = it."technologyId")
+    select * from data
+    `,
+    name,
+    id
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);
-
   return res.status(200).json(queryResult.rows[0]);
 };
 
@@ -155,34 +171,18 @@ const deleteTechProject = async (
   const id = parseInt(req.params.id);
   const name = req.params.name;
 
-  const queryString = `
-    select t.id
-    from projects_technologies as pt
-    full join technologies as t
-    on pt.technology_id = t.id
-    where t.name ilike $1
-`;
-
-  const queryFormatTech = {
-    text: queryString,
-    values: [name],
-  };
-
-  const queryResultName: QueryResult = await client.query(queryFormatTech);
-
   const queryFormat = format(
     `
-      delete from
-        projects_technologies pt
-      using
-        technologies t
-      where 
-        pt.project_id = %s AND
-        pt.technology_id = %s
-
+      with
+        tech as (
+          select * from technologies t
+          where t.name ilike '%s' )
+      delete from projects_technologies pt
+      using tech t
+      where pt."projectId" = %s and pt."technologyId" = t.id
   `,
-    id,
-    queryResultName.rows[0].id
+    name,
+    id
   );
 
   await client.query(queryFormat);

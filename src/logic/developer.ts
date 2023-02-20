@@ -62,36 +62,26 @@ const getAllProjectsDeveloper = async (
   const queryFormat = format(
     `
       select
-      d.id as developer_id,
-      d.name as developer_name,
-      d.email as developer_email,
-      d.developer_info_id,
-      di.developer_since as developer_info_developer_since,
-      di.preferred_OS as developer_info_preferred,
-      p.id as project_id,
-      p.name as project_name,
-      p.description as project_description,
-      p.estimated_time as project_estimated_time,
-      p.repository as project_repository,
-      p.start_date as project_start_date,
-      p.end_date as project_end_date,
-      t.id as technology_id,
-      t.name as technology_name
-
+      d.id as "developerId",
+      d.name as "developerName",
+      d.email as "developerEmail",
+      d."developerInfoId",
+      di."developerSince" as "developerInfoDeveloperSince",
+      di."preferredOS" as "developerInfoPreferred",
+      p.id as "projectId",
+      p.name as "projectName",
+      p.description as "projectDescription",
+      p."estimatedTime" as "projectEstimatedTime",
+      p.repository as "projectRepository",
+      p."startDate" as "projectStartDate",
+      p."endDate" as "projectEndDate",
+      t.id as "technologyId",
+      t.name as "technologyName"
       from developers as d 
-
-      left join developer_infos as di
-      on di.id = d.developer_info_id
-      
-      left join projects as p
-      on p.developer_id = d.id 
-
-      left join projects_technologies as pt
-      on pt.project_id = p.id
-
-      left join technologies as t
-      on t.id = pt.project_id
-
+      left join developer_infos as di on di.id = d."developerInfoId"
+      left join projects as p on p."developerId" = d.id 
+      left join projects_technologies as pt on pt."projectId" = p.id
+      left join technologies as t on t.id = pt."projectId"
       where d.id = %s
   `,
     id
@@ -131,6 +121,8 @@ const patchDeveloper = async (
   const values = Object.values(req.body);
   const id = parseInt(req.params.id);
 
+  console.log(req.body);
+
   const queryFormat = format(
     `
       update 
@@ -158,10 +150,14 @@ const deleteDeveloper = async (
 
   const queryFormat = format(
     `
-      delete from
-        developers
-      where
-        id = %s
+    with dev as (
+      delete from developers d
+      where d.id = %s
+      returning *
+    )
+    delete from developer_infos di
+    using dev d
+    where di.id = d."developerInfoId"
   `,
     id
   );
@@ -211,13 +207,12 @@ const patchInfoDeveloper = async (
 
   const queryFormat = format(
     `
-      update 
-        developer_infos
-      set 
-        (%I) = row(%L)
-      where 
-        id = %s
-      returning *
+      update developer_infos dt
+      set (%I) = row(%L)
+      from developers d
+      where d."developerInfoId" = dt.id 
+      and d.id = %s
+      returning dt.*
   `,
     insert,
     values,
