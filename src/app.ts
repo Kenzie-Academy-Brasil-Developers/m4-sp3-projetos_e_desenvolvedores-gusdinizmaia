@@ -9,7 +9,7 @@ import {
   patchInfoDeveloper,
   postDeveloper,
   postInfoDeveloper,
-} from "./logic/developer";
+} from "./logic/developer.logic";
 
 import {
   deleteProject,
@@ -19,7 +19,7 @@ import {
   patchProject,
   postProject,
   postTechProject,
-} from "./logic/projects";
+} from "./logic/project.logic";
 
 import {
   validateDevelopersId,
@@ -27,13 +27,13 @@ import {
   validateEmail,
   validateDeveloperKeys,
   validateInfoKeys,
-} from "./middlewares/developers";
+} from "./middlewares/developer.middleswares.";
 import {
   validateProjectId,
   validateProjectKeys,
   validateDevProjects,
   validateTechKeys,
-} from "./middlewares/projects";
+} from "./middlewares/project.middlewares";
 
 const app: Application = express();
 
@@ -51,8 +51,8 @@ app.get(
 app.get("/developers", getAllDevelopers);
 app.patch(
   "/developers/:id",
-  validateDevelopersId,
   validateDeveloperKeys,
+  validateDevelopersId,
   validateEmail,
   patchDeveloper
 );
@@ -67,13 +67,12 @@ app.patch(
   "/developers/:id/infos",
   validateInfoKeys,
   validateDevelopersId,
-  validateInfoId,
   patchInfoDeveloper
 );
 
 // PROJECTS
 
-app.post("/projects", validateDevProjects, validateProjectKeys, postProject);
+app.post("/projects", validateProjectKeys, validateDevProjects, postProject);
 app.get("/projects/:id", validateProjectId, getProject);
 app.get("/projects", getAllProjects);
 app.patch(

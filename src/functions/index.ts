@@ -1,58 +1,45 @@
-import { client } from "../database/config";
+const verificationKeys = (method: string, body: any, required: string[]) => {
+  const keys: string[] | [] = Object.keys(body);
+  keys.forEach((elem) => (required.includes(elem) ? elem : delete body[elem]));
 
-const requiredDeveloper = ["name", "email"];
-const requiredInfo = ["developer_since", "preferred_os"];
-const requiredProject = [
-  "name",
-  "description",
-  "estimated_time",
-  "repository",
-  "start_date",
-  "developer_id",
-];
-const requiredTech = ["added_in", "name"];
+  const newKeys = Object.keys(body);
 
-const verificationKeys = (body: any, required: string[]) => {
-  const keys = Object.keys(body);
-
-  keys.forEach((elem) => (required.includes(elem) ? "" : delete body[elem]));
-
-  const findError = required.filter((elem) => !keys.includes(elem));
-
-  if (findError.length > 0) {
+  if (newKeys.length <= 0) {
     return {
       message: "Missing required keys",
-      keys: findError,
+      keys: required,
     };
   }
 
-  return false;
+  switch (method) {
+    case "POST": {
+      const findError = required.filter((elem) => !newKeys.includes(elem));
+      return findError.length <= 0
+        ? false
+        : {
+            message: "Missing required keys",
+            keys: findError,
+          };
+    }
+    case "PACTH": {
+      const findError = required.some((elem) => newKeys.includes(elem));
+      return findError
+        ? false
+        : {
+            message: "At least one of those keys must be send.",
+            keys: findError,
+          };
+    }
+  }
 };
 
-// const searchTech = async (tech: number) => {
-//   const queryString = `
-//     select
-//       *
-//     from
-//       technologies
-//     where
-//       'name' ilike'React'
-//   `;
-
-//   // const queryConfig = {
-//   //   text: queryString,
-//   //   values: [tech],
-//   // };
-
-//   const queryResult = await client.query(queryString);
-
-//   return queryResult.rows[0].name;
-// };
-
-export {
-  requiredDeveloper,
-  requiredInfo,
-  requiredProject,
-  requiredTech,
-  verificationKeys,
+const verificationTypes = (required: string[], body: any) => {
+  return required.includes(body)
+    ? false
+    : {
+        message: "Missing required keys, you need at least one",
+        keys: required,
+      };
 };
+
+export { verificationKeys, verificationTypes };

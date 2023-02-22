@@ -2,10 +2,11 @@ import { Response, Request } from "express";
 import { QueryConfig, QueryResult } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
+import { iProject } from "../interfaces/project.interface";
 
 const postProject = async (req: Request, res: Response): Promise<Response> => {
-  const insert = Object.keys(req.body);
-  const values = Object.values(req.body);
+  const insert: string[] = Object.keys(req.body);
+  const values: string[] = Object.values(req.body);
 
   const queryFormat = format(
     `
@@ -19,28 +20,28 @@ const postProject = async (req: Request, res: Response): Promise<Response> => {
     values
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iProject> = await client.query(queryFormat);
 
   return res.status(201).json(queryResult.rows[0]);
 };
 
 const getProject = async (req: Request, res: Response): Promise<Response> => {
-  const id = parseInt(req.params.id);
+  const id: number = parseInt(req.params.id);
 
   const queryString = `
-      select 
-        p.*, t.id as technology_id, 
-        t.name as technology_name
-      from
-        projects p
-      left join 
-        projects_technologies pt
-      on
-        pt.project_id = p.id
-      join 
-        technologies t
-      on
-        t.id = pt.technology_id
+    select 
+      p.*, t.id as "technologyId", 
+      t.name as "technologyName"
+    from
+      projects p
+    left join 
+      projects_technologies pt
+    on
+      pt."projectId" = p.id
+    left join 
+      technologies t
+    on
+      t.id = pt."technologyId"
       where 
         p.id = $1
   `;
@@ -61,18 +62,18 @@ const getAllProjects = async (
 ): Promise<Response> => {
   const queryString = `
     select 
-      p.*, t.id as technology_id, 
-      t.name as technology_name
+      p.*, t.id as "technologyId", 
+      t.name as "technologyName"
     from
       projects p
     left join 
       projects_technologies pt
     on
-      pt.project_id = p.id
+      pt."projectId" = p.id
     left join 
       technologies t
     on
-      t.id = pt.technology_id
+      t.id = pt."technologyId"
   `;
 
   const queryResult: QueryResult = await client.query(queryString);
@@ -82,8 +83,8 @@ const getAllProjects = async (
 
 const patchProject = async (req: Request, res: Response): Promise<Response> => {
   const id = parseInt(req.params.id);
-  const insert = Object.keys(req.body);
-  const values = Object.values(req.body);
+  const insert: string[] = Object.keys(req.body);
+  const values: string[] = Object.values(req.body);
 
   const queryFormat = format(
     `
@@ -100,7 +101,7 @@ const patchProject = async (req: Request, res: Response): Promise<Response> => {
     id
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iProject> = await client.query(queryFormat);
 
   return res.status(201).json(queryResult.rows[0]);
 };
@@ -109,7 +110,7 @@ const deleteProject = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const id = parseInt(req.params.id);
+  const id: number = parseInt(req.params.id);
 
   const queryFormat = format(
     `
@@ -130,38 +131,36 @@ const postTechProject = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const id = parseInt(req.params.id);
-  const added = req.body.added_in;
-
-  const queryString = `
-    select t.id
-    from projects_technologies as pt
-    full join technologies as t
-    on pt.technology_id = t.id
-    where t.name ilike $1
-`;
-
-  const queryFormatTech = {
-    text: queryString,
-    values: [req.body.name],
-  };
-
-  const queryResultName: QueryResult = await client.query(queryFormatTech);
+  const name: string = req.body.name;
+  const id: number = parseInt(req.params.id);
 
   const queryFormat = format(
     `
-      insert into projects_technologies
-        (%I) 
-      values 
-        (%L)
-      returning *
-  `,
-    ["added_in", "project_id", "technology_id"],
-    [added, id, queryResultName.rows[0].id]
+    with tech as (
+        select * from technologies t
+        where t.name ilike '%s'),
+    insert_tech as (
+        insert into projects_technologies ("addedIn", "projectId", "technologyId")
+        values( current_date , %s , (select t.id from tech t))
+        returning * ),
+    data as (
+      select t.name as "technologyName", t.id as "technologyId",
+      p."id" as "projectId", p."name" as "projectName",
+      p."description" as "projectDescription", 
+      p."estimatedTime" as "projectEstimatedTime",
+      p."repository" as "projectRepository",
+      p."startDate" as "projectStartDate",
+      p."endDate" as "projectEndDate"
+      from projects as p
+      join insert_tech it on it."projectId" = p.id
+      join tech t on t.id = it."technologyId")
+    select * from data
+    `,
+    name,
+    id
   );
 
   const queryResult: QueryResult = await client.query(queryFormat);
-
   return res.status(200).json(queryResult.rows[0]);
 };
 
@@ -172,34 +171,18 @@ const deleteTechProject = async (
   const id = parseInt(req.params.id);
   const name = req.params.name;
 
-  const queryString = `
-    select t.id
-    from projects_technologies as pt
-    full join technologies as t
-    on pt.technology_id = t.id
-    where t.name ilike $1
-`;
-
-  const queryFormatTech = {
-    text: queryString,
-    values: [name],
-  };
-
-  const queryResultName: QueryResult = await client.query(queryFormatTech);
-
   const queryFormat = format(
     `
-      delete from
-        projects_technologies pt
-      using
-        technologies t
-      where 
-        pt.project_id = %s AND
-        pt.technology_id = %s
-
+      with
+        tech as (
+          select * from technologies t
+          where t.name ilike '%s' )
+      delete from projects_technologies pt
+      using tech t
+      where pt."projectId" = %s and pt."technologyId" = t.id
   `,
-    id,
-    queryResultName.rows[0].id
+    name,
+    id
   );
 
   await client.query(queryFormat);

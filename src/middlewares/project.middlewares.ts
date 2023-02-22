@@ -1,14 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import format from "pg-format";
 import { client } from "../database/config";
-import { requiredProject, requiredTech, verificationKeys } from "../functions";
+import { verificationKeys } from "../functions";
+import { requiredProject, requiredTech } from "../interfaces/project.interface";
 
 const validateDevProjects = async (
   req: Request,
   resp: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const id = parseInt(req.body.developer_id);
+  const id = parseInt(req.body.developerId);
 
   const queryFormat = format(
     `
@@ -38,7 +39,7 @@ const validateProjectKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredProject);
+  const findError = verificationKeys(req.method, req.body, requiredProject);
 
   if (findError) {
     return res.status(400).json(findError);
@@ -52,7 +53,7 @@ const validateTechKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredTech);
+  const findError = verificationKeys(req.method, req.body, requiredTech);
 
   if (findError) {
     return res.status(400).json(findError);

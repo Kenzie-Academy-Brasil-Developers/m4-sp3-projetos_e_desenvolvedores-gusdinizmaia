@@ -2,21 +2,26 @@ import { NextFunction, Request, Response } from "express";
 import { QueryConfig } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
+import { verificationKeys, verificationTypes } from "../functions";
 import {
   requiredDeveloper,
   requiredInfo,
-  verificationKeys,
-} from "../functions";
+  requiredOs,
+} from "../interfaces/developer.interface";
 
 const validateInfoKeys = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredInfo);
-
+  const findError = verificationKeys(req.method, req.body, requiredInfo);
   if (findError) {
     return res.status(400).json(findError);
+  }
+
+  const findErrorOs = verificationTypes(requiredOs, req.body.preferredOS);
+  if (findErrorOs) {
+    return res.status(400).json(findErrorOs);
   }
 
   next();
@@ -27,7 +32,7 @@ const validateDeveloperKeys = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const findError = verificationKeys(req.body, requiredDeveloper);
+  const findError = verificationKeys(req.method, req.body, requiredDeveloper);
 
   if (findError) {
     return res.status(400).json(findError);

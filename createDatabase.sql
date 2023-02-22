@@ -1,47 +1,49 @@
-create type preferred_os as enum ('Windows', 'MacOS', 'Linux');
+create type os as enum ('Windows', 'MacOS', 'Linux');
 
 create table developer_infos (
-    id serial primary key,
-    developer_since date not null,
-    "preferred_os" preferred_os not null
-);
-
-create table developers (
-    id serial primary key,
-    name varchar(50) not null,
-    email varchar(50) not null unique,
-    developer_info_id integer unique,
-    foreign key (developer_info_id) references developer_infos(id)
-);
-
-create table projects (
-    id serial primary key,
-    name varchar(50) not null,
-    description text not null,
-    estimated_time varchar(20) not null,
-    repository varchar(120) not null,
-    start_date date not null,
-    end_date date,
-    developer_id integer not null,
-    foreign key (developer_id) references developers(id)
-);
-
-create table projects_technologies (
-    id serial not null primary key,
-    added_in date not null,
-    project_id integer not null,
-    technology_id integer not null,
-    foreign key (project_id) references projects(id),
-    foreign key (technology_id) references technologies(id)
+    "id" serial primary key,
+    "developerSince" date not null,
+    "preferredOS" os not null
 );
 
 create table technologies (
-    id serial primary key,
-    name varchar(50) not null
+    "id" serial primary key,
+    "name" varchar(50) not null
 );
 
+create table developers (
+    "id" serial primary key,
+    "name" varchar(50) not null,
+    "email" varchar(50) not null unique,
+    "developerInfoId" integer unique,
+    foreign key ("developerInfoId") references developer_infos(id)
+);
+
+create table projects (
+    "id" serial primary key,
+    "name" varchar(50) not null,
+    "description" text not null,
+    "estimatedTime" varchar(20) not null,
+    "repository" varchar(120) not null,
+    "startDate" date not null,
+    "endDate" date,
+    "developerId" integer not null,
+    foreign key ("developerId") references developers("id") on delete cascade
+);
+
+
+create table projects_technologies (
+    "id" serial not null primary key,
+    "addedIn" date not null default current_date,
+    "projectId" integer not null,
+    "technologyId" integer not null,
+    foreign key ("projectId") references projects(id) on delete cascade,
+    foreign key ("technologyId") references technologies(id)
+);
+
+
 INSERT INTO 
-    technologies (name) 
+    technologies ("name") 
 values 
     ('JavaScript'),
     ('Python'),
