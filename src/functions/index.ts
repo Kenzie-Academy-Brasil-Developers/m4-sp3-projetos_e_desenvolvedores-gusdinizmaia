@@ -1,16 +1,3 @@
-const requiredDeveloper = ["name", "email"];
-const requiredInfo = ["developerSince", "preferredOS"];
-const requiredOs = ["Windows", "Linux", "MacOS"];
-const requiredProject = [
-  "name",
-  "description",
-  "estimatedTime",
-  "repository",
-  "startDate",
-  "developerId",
-];
-const requiredTech = ["name"];
-
 const verificationKeys = (method: string, body: any, required: string[]) => {
   const keys: string[] | [] = Object.keys(body);
   keys.forEach((elem) => (required.includes(elem) ? elem : delete body[elem]));
@@ -55,12 +42,4 @@ const verificationTypes = (required: string[], body: any) => {
       };
 };
 
-export {
-  requiredDeveloper,
-  requiredInfo,
-  requiredOs,
-  requiredProject,
-  requiredTech,
-  verificationKeys,
-  verificationTypes,
-};
+export { verificationKeys, verificationTypes };

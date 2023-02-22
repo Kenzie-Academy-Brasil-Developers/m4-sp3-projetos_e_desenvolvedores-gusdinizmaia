@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import format from "pg-format";
 import { client } from "../database/config";
-import { requiredProject, requiredTech, verificationKeys } from "../functions";
+import { verificationKeys } from "../functions";
+import { requiredProject, requiredTech } from "../interfaces/project.interface";
 
 const validateDevProjects = async (
   req: Request,

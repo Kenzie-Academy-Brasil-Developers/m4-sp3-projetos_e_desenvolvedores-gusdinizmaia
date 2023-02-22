@@ -2,10 +2,11 @@ import { Response, Request } from "express";
 import { QueryConfig, QueryResult } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
+import { iProject } from "../interfaces/project.interface";
 
 const postProject = async (req: Request, res: Response): Promise<Response> => {
-  const insert = Object.keys(req.body);
-  const values = Object.values(req.body);
+  const insert: string[] = Object.keys(req.body);
+  const values: string[] = Object.values(req.body);
 
   const queryFormat = format(
     `
@@ -19,13 +20,13 @@ const postProject = async (req: Request, res: Response): Promise<Response> => {
     values
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iProject> = await client.query(queryFormat);
 
   return res.status(201).json(queryResult.rows[0]);
 };
 
 const getProject = async (req: Request, res: Response): Promise<Response> => {
-  const id = parseInt(req.params.id);
+  const id: number = parseInt(req.params.id);
 
   const queryString = `
     select 
@@ -82,8 +83,8 @@ const getAllProjects = async (
 
 const patchProject = async (req: Request, res: Response): Promise<Response> => {
   const id = parseInt(req.params.id);
-  const insert = Object.keys(req.body);
-  const values = Object.values(req.body);
+  const insert: string[] = Object.keys(req.body);
+  const values: string[] = Object.values(req.body);
 
   const queryFormat = format(
     `
@@ -100,7 +101,7 @@ const patchProject = async (req: Request, res: Response): Promise<Response> => {
     id
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iProject> = await client.query(queryFormat);
 
   return res.status(201).json(queryResult.rows[0]);
 };
@@ -109,7 +110,7 @@ const deleteProject = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const id = parseInt(req.params.id);
+  const id: number = parseInt(req.params.id);
 
   const queryFormat = format(
     `
@@ -130,9 +131,8 @@ const postTechProject = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const name = req.body.name;
-  const id = parseInt(req.params.id);
-  const added = req.body.addedIn;
+  const name: string = req.body.name;
+  const id: number = parseInt(req.params.id);
 
   const queryFormat = format(
     `

@@ -2,13 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import { QueryConfig } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
+import { verificationKeys, verificationTypes } from "../functions";
 import {
   requiredDeveloper,
   requiredInfo,
   requiredOs,
-  verificationKeys,
-  verificationTypes,
-} from "../functions";
+} from "../interfaces/developer.interface";
 
 const validateInfoKeys = async (
   req: Request,

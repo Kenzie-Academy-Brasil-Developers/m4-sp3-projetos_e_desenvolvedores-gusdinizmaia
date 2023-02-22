@@ -9,7 +9,7 @@ import {
   patchInfoDeveloper,
   postDeveloper,
   postInfoDeveloper,
-} from "./logic/developer";
+} from "./logic/developer.logic";
 
 import {
   deleteProject,
@@ -19,7 +19,7 @@ import {
   patchProject,
   postProject,
   postTechProject,
-} from "./logic/projects";
+} from "./logic/project.logic";
 
 import {
   validateDevelopersId,
@@ -27,13 +27,13 @@ import {
   validateEmail,
   validateDeveloperKeys,
   validateInfoKeys,
-} from "./middlewares/developers";
+} from "./middlewares/developer.middleswares.";
 import {
   validateProjectId,
   validateProjectKeys,
   validateDevProjects,
   validateTechKeys,
-} from "./middlewares/projects";
+} from "./middlewares/project.middlewares";
 
 const app: Application = express();
 

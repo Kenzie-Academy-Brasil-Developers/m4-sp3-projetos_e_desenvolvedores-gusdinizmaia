@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { QueryResult } from "pg";
 import format from "pg-format";
 import { client } from "../database/config";
+import { iDeveloper, iDeveloperInfo } from "../interfaces/developer.interface";
 
 const postDeveloper = async (
   req: Request,
@@ -22,7 +23,7 @@ const postDeveloper = async (
     values
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iDeveloper> = await client.query(queryFormat);
 
   return res.status(201).json(queryResult.rows[0]);
 };
@@ -48,7 +49,7 @@ const getDeveloper = async (req: Request, res: Response): Promise<Response> => {
   `,
     id
   );
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iDeveloper> = await client.query(queryFormat);
 
   return res.status(200).json(queryResult.rows[0]);
 };
@@ -121,8 +122,6 @@ const patchDeveloper = async (
   const values = Object.values(req.body);
   const id = parseInt(req.params.id);
 
-  console.log(req.body);
-
   const queryFormat = format(
     `
       update 
@@ -137,7 +136,7 @@ const patchDeveloper = async (
     values,
     id
   );
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iDeveloper> = await client.query(queryFormat);
 
   return res.status(200).json(queryResult.rows[0]);
 };
@@ -193,7 +192,9 @@ const postInfoDeveloper = async (
     id
   );
 
-  const queryResult: QueryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iDeveloperInfo> = await client.query(
+    queryFormat
+  );
   return res.status(201).json(queryResult.rows[0]);
 };
 
@@ -219,7 +220,9 @@ const patchInfoDeveloper = async (
     id
   );
 
-  const queryResult = await client.query(queryFormat);
+  const queryResult: QueryResult<iDeveloperInfo> = await client.query(
+    queryFormat
+  );
 
   return res.status(200).json(queryResult.rows[0]);
 };
